@@ -1,0 +1,92 @@
+<script>
+  const DEST = "https://www.dudalina.com.br/colecoes/novidades";
+  const ua = navigator.userAgent || "";
+
+  const isAndroid = /android/i.test(ua);
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isWhatsApp = /whatsapp/i.test(ua);
+
+  const btn = document.getElementById("cta-btn");
+
+  function redirect() {
+
+    // 🔎 DEBUG
+    console.log("redirect attempt", {
+      device: isAndroid ? "android" : "ios",
+      isWhatsApp,
+      userAgent: ua
+    });
+
+    // 📱 ANDROID + WHATSAPP → força abrir no Chrome
+    if (isAndroid && isWhatsApp) {
+      const host = DEST.replace(/^https?:\/\//, "");
+
+      window.location.href =
+        `intent://${host}#Intent;scheme=https;package=com.android.chrome;end`;
+
+      return;
+    }
+
+    // 🍎 iOS + WhatsApp → tenta abrir (fallback manual ainda necessário)
+    if (isIOS && isWhatsApp) {
+      window.location.href = DEST;
+      return;
+    }
+  }
+
+  // 🔥 tenta redirect rápido
+  setTimeout(redirect, 300);
+
+  // 👇 se não sair da página, mostra UI
+  setTimeout(() => {
+    document.body.classList.add("show-content");
+  }, 1200);
+
+
+  // =========================
+  // 👇 BOTÃO (fallback manual)
+  // =========================
+
+  if (isAndroid) {
+    const host = DEST.replace(/^https?:\/\//, "");
+    btn.href = `intent://${host}#Intent;scheme=https;package=com.android.chrome;end`;
+    btn.removeAttribute("target");
+  }
+
+  if (isIOS) {
+    document.getElementById("ios-tip").classList.add("show");
+    document.getElementById("sub").textContent =
+      'Toque no botão e escolha "Abrir no Safari"';
+  }
+
+
+  // =========================
+  // 📋 COPY LINK
+  // =========================
+
+  function copyLink() {
+    const feedback = document.getElementById("feedback");
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(DEST).then(() => {
+        feedback.textContent = "✓ Link copiado! Cole no navegador.";
+        setTimeout(() => { feedback.textContent = ""; }, 3000);
+      });
+    } else {
+      const el = document.createElement("textarea");
+      el.value = DEST;
+      document.body.appendChild(el);
+      el.select();
+
+      try {
+        document.execCommand("copy");
+        feedback.textContent = "✓ Link copiado!";
+      } catch {
+        feedback.textContent = "Copie manualmente o link.";
+      }
+
+      document.body.removeChild(el);
+      setTimeout(() => { feedback.textContent = ""; }, 3000);
+    }
+  }
+</script>
